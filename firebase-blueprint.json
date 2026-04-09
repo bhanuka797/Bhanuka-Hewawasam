@@ -1,0 +1,144 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile information and course enrollment status.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "Unique identifier for the user." },
+        "email": { "type": "string", "format": "email", "description": "User's email address." },
+        "displayName": { "type": "string", "description": "User's display name from Auth." },
+        "fullName": { "type": "string", "description": "Student's full name from registration." },
+        "grade": { "type": "number", "description": "Student's grade level (6-9)." },
+        "schoolName": { "type": "string", "description": "Student's school name." },
+        "phoneNumber": { "type": "string", "description": "Parent or student phone number." },
+        "whatsappNumber": { "type": "string", "description": "Student's WhatsApp number." },
+        "registrationCompleted": { "type": "boolean", "description": "Whether the user has completed onboarding." },
+        "role": { "type": "string", "enum": ["student", "admin"], "description": "User's role in the system." },
+        "enrolledCourses": { "type": "array", "items": { "type": "string" }, "description": "List of course IDs the user is enrolled in." }
+      },
+      "required": ["uid", "email", "role"]
+    },
+    "Grade": {
+      "title": "Grade",
+      "description": "A grade level (e.g., Grade 6, Grade 7).",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "level": { "type": "number" },
+        "whatsappLink": { "type": "string", "format": "uri", "description": "WhatsApp group invite link for this grade." },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "level"]
+    },
+    "Course": {
+      "title": "Course",
+      "description": "Information about a specific ICT course.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "grade": { "type": "number", "description": "Target grade level (6-9)." },
+        "language": { "type": "string", "enum": ["Sinhala", "English"] },
+        "thumbnail": { "type": "string", "format": "uri" },
+        "price": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "grade", "language"]
+    },
+    "Lesson": {
+      "title": "Lesson",
+      "description": "A single lesson within a course.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "courseId": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "videoUrl": { "type": "string", "format": "uri" },
+        "order": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["courseId", "title", "videoUrl", "order"]
+    },
+    "Progress": {
+      "title": "Progress",
+      "description": "Tracking student progress in a course.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "courseId": { "type": "string" },
+        "completedLessons": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["userId", "courseId"]
+    },
+    "AccessRequest": {
+      "title": "AccessRequest",
+      "description": "Manual payment confirmation requests.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "courseId": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "approved", "rejected"] },
+        "paymentProof": { "type": "string", "description": "Reference or note about payment." },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "courseId", "status"]
+    },
+    "Quiz": {
+      "title": "Quiz",
+      "description": "A quiz within a course.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "courseId": { "type": "string" },
+        "lessonId": { "type": "string", "description": "Optional link to a specific lesson." },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "questions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "question": { "type": "string" },
+              "options": { "type": "array", "items": { "type": "string" } },
+              "correctAnswer": { "type": "number", "description": "Index of the correct option." }
+            },
+            "required": ["question", "options", "correctAnswer"]
+          }
+        },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["courseId", "title", "questions"]
+    },
+    "QuizSubmission": {
+      "title": "QuizSubmission",
+      "description": "A student's attempt at a quiz.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "quizId": { "type": "string" },
+        "courseId": { "type": "string" },
+        "score": { "type": "number" },
+        "totalQuestions": { "type": "number" },
+        "answers": { "type": "array", "items": { "type": "number" } },
+        "completedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "quizId", "courseId", "score", "totalQuestions"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": { "schema": "User", "description": "User profiles." },
+    "/courses/{courseId}": { "schema": "Course", "description": "Available courses." },
+    "/courses/{courseId}/lessons/{lessonId}": { "schema": "Lesson", "description": "Lessons within a course." },
+    "/courses/{courseId}/quizzes/{quizId}": { "schema": "Quiz", "description": "Quizzes within a course." },
+    "/progress/{progressId}": { "schema": "Progress", "description": "User progress records (ID is userId_courseId)." },
+    "/accessRequests/{requestId}": { "schema": "AccessRequest", "description": "Payment verification requests." },
+    "/grades/{gradeId}": { "schema": "Grade", "description": "Available grade levels." },
+    "/quizSubmissions/{submissionId}": { "schema": "QuizSubmission", "description": "Student quiz results." }
+  }
+}
